@@ -11,8 +11,8 @@ pub trait Storage {
     ) -> Result<Vec<Entry>, rusqlite::Error>;
     fn current_entries(&self) -> Result<Vec<Entry>, rusqlite::Error>;
     fn entrie_by_id(&self, id: usize) -> Result<Entry, rusqlite::Error>;
-    fn add_entry(&self, entry: Entry);
-    fn update_entry(&self, entry: Entry) -> Result<(), rusqlite::Error>;
+    fn add_entry(&self, entry: &Entry);
+    fn update_entry(&self, entry: &Entry) -> Result<(), rusqlite::Error>;
 }
 
 pub struct SqlStorage {
@@ -37,7 +37,7 @@ impl SqlStorage {
 }
 
 impl Storage for SqlStorage {
-    fn add_entry(&self, entry: Entry) {
+    fn add_entry(&self, entry: &Entry) {
         self.connection
             .execute(
                 "INSERT INTO entries (start, end, name) VALUES(?, ?, ?)",
@@ -51,7 +51,7 @@ impl Storage for SqlStorage {
                 prev.end = Some(entry.start);
             }
 
-            match self.update_entry(prev) {
+            match self.update_entry(&prev) {
                 Err(e) => println!("{}", e),
                 Ok(()) => (),
             }
@@ -106,7 +106,7 @@ impl Storage for SqlStorage {
         Ok(entries)
     }
 
-    fn update_entry(&self, entry: Entry) -> Result<(), rusqlite::Error> {
+    fn update_entry(&self, entry: &Entry) -> Result<(), rusqlite::Error> {
         match self.connection.execute(
             "UPDATE entries set start = ?, end = ?, name = ? where id == ?",
             params![&entry.start, &entry.end, &entry.name, &entry.id],
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn add_entry() {
         let storage = SqlStorage::memory();
-        storage.add_entry(Entry {
+        storage.add_entry(&Entry {
             id: 0,
             start: Utc::now(),
             end: Some(Utc::now()),

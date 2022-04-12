@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Entry {
     pub id: usize,
     pub start: DateTime<Utc>,
