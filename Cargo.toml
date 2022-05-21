@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.19"
-rusqlite = { version = "0.27.0", features = ["chrono"] }
+chrono = { version="0.4.19", features = ["serde"] }
 directories-next = "2.0.0"
 clap = "3.1.18"
+diesel = { version = "1.4.8", features = ["sqlite", "chrono"] }
+serde = { version="1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+diesel_migrations = { version = "1.4.0", features = ["sqlite"] }

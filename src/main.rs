@@ -1,10 +1,10 @@
-mod data;
-mod storage;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
-use chrono::prelude::*;
+mod db;
 use clap::{arg, Command};
-use directories_next::ProjectDirs;
-use storage::{SqlStorage, Storage};
 
 fn cli() -> Command<'static> {
     Command::new("zeitfresser")
@@ -13,59 +13,59 @@ fn cli() -> Command<'static> {
         .arg_required_else_help(true)
         .subcommand(
             Command::new("start")
-                .about("Tracks a new task")
+                .about("Tracks a new task, ending the previous one.")
                 .arg(arg!(<NAME> "The name of the task"))
                 .arg_required_else_help(true),
         )
         .subcommand(Command::new("end").about("Ends the current task"))
         .subcommand(Command::new("list").about("Lists the previous taks"))
+        .subcommand(Command::new("summary"))
+        .subcommand(Command::new("clear").about("Removes all taks"))
 }
 
 fn main() {
     let matches = cli().get_matches();
     match matches.subcommand() {
-        Some(("start", sub_matches)) => cmd_start(sub_matches.value_of("NAME").expect("required")),
+        Some(("start", sub_matches)) => cmd_start(sub_matches.value_of("NAME").expect("")),
         Some(("end", _)) => cmd_end(),
         Some(("list", _)) => cmd_list(),
+        Some(("clear", _)) => db::remove(),
+        Some(("summary", _)) => cmd_summary(),
         _ => unreachable!(),
     }
 }
 
-fn get_storage() -> SqlStorage {
-    let proj_dirs = ProjectDirs::from("Zeitfresser", "Zeitfresser", "Zeitfresser").unwrap();
-    let config_dir = proj_dirs.config_dir();
-    let db_path = config_dir.join("database.sqlite3");
-    std::fs::create_dir_all(&config_dir).unwrap();
-
-    SqlStorage::file(db_path)
-}
-
 fn cmd_start(name: &str) {
-    let storage = get_storage();
-    let e = data::Entry::new(name.to_string());
-    storage.add_entry(&e);
+    db::end_all();
+    db::add_task(name);
 }
 
 fn cmd_end() {
-    let storage = get_storage();
-
-    let entries = match storage.current_entries() {
-        Ok(e) => e,
-        Err(_) => return,
-    };
-
-    let mut last = match entries.last() {
-        None => return,
-        Some(e) => e.clone(),
-    };
-
-    last.end = Some(Utc::now());
-    _ = storage.update_entry(&last);
+    db::end_all();
 }
 
 fn cmd_list() {
-    let storage = get_storage();
-    for entry in storage.current_entries().unwrap() {
-        println!("{:?}", entry);
+    let tasks = db::get_tasks();
+    if tasks.is_empty() {
+        println!("No tasks available.");
+        return;
     }
+    for task in tasks {
+        println!("{:?}", task);
+    }
+}
+
+fn cmd_summary() {
+    let tasks = db::get_tasks();
+    tasks.iter().for_each(|t| {
+        let title = &t.title;
+        let duration = t.finished_at.unwrap_or(chrono::Utc::now().naive_utc()) - t.started_at;
+        println!(
+            "{:02}:{:02}:{:02} - {}",
+            duration.num_hours(),
+            duration.num_minutes(),
+            duration.num_seconds(),
+            title
+        )
+    });
 }
