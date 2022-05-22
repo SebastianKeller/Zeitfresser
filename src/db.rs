@@ -1,11 +1,11 @@
-use std::path::PathBuf;
-
+use chrono::Datelike;
 use diesel::prelude::*;
-pub mod models;
-pub mod schema;
-
 use directories_next::ProjectDirs;
 use models::Task;
+use std::path::PathBuf;
+
+pub mod models;
+pub mod schema;
 
 embed_migrations!();
 
@@ -31,10 +31,31 @@ pub fn remove() {
     std::fs::remove_file(path).expect("Could not remove db");
 }
 
-pub fn get_tasks() -> Vec<Task> {
+pub fn get_tasks(filter: models::Filter) -> Vec<Task> {
     let conn = establish_connection();
     use schema::tasks::dsl::*;
-    tasks
+    let mut query = tasks.into_boxed();
+
+    match filter {
+        models::Filter::All => {}
+        models::Filter::Day(date) => {
+            let start = date.and_hms(0, 0, 0).naive_utc();
+            let end = date.and_hms(23, 59, 59).naive_utc();
+            query = query.filter(started_at.between(start, end))
+        }
+        models::Filter::Week => {
+            let mut start = chrono::offset::Local::now().date();
+            start = start - chrono::Duration::days(start.weekday().num_days_from_monday().into());
+            let end = start + chrono::Duration::days(6);
+
+            query = query.filter(started_at.between(
+                start.and_hms(0, 0, 0).naive_utc(),
+                end.and_hms(23, 59, 59).naive_utc(),
+            ))
+        }
+    }
+
+    query
         .order_by(started_at)
         .load::<Task>(&conn)
         .expect("Error loading tasks")
@@ -52,7 +73,7 @@ pub fn add_task(name: &str) {
         .expect("Insertion failed");
 }
 
-pub fn end_all() {
+pub fn finish_all() {
     let conn = establish_connection();
     use schema::tasks::dsl::*;
     let target = tasks.filter(finished_at.is_null());

@@ -5,6 +5,8 @@ extern crate diesel_migrations;
 
 mod db;
 use clap::{arg, Command};
+use db::models::Filter;
+use db::models::Task;
 
 fn cli() -> Command<'static> {
     Command::new("zeitfresser")
@@ -27,7 +29,7 @@ fn main() {
     let matches = cli().get_matches();
     match matches.subcommand() {
         Some(("start", sub_matches)) => cmd_start(sub_matches.value_of("NAME").expect("")),
-        Some(("end", _)) => cmd_end(),
+        Some(("stop", _)) => cmd_stop(),
         Some(("list", _)) => cmd_list(),
         Some(("clear", _)) => db::remove(),
         Some(("summary", _)) => cmd_summary(),
@@ -36,36 +38,57 @@ fn main() {
 }
 
 fn cmd_start(name: &str) {
-    db::end_all();
+    db::finish_all();
     db::add_task(name);
 }
 
-fn cmd_end() {
-    db::end_all();
+fn cmd_stop() {
+    db::finish_all();
 }
 
 fn cmd_list() {
-    let tasks = db::get_tasks();
+    let tasks = db::get_tasks(Filter::Day(chrono::Local::now().date()));
+    print_tasks(tasks);
+}
+
+fn cmd_summary() {
+    let tasks = db::get_tasks(Filter::Week);
+    print_tasks(tasks);
+}
+
+fn print_tasks(tasks: Vec<Task>) {
     if tasks.is_empty() {
         println!("No tasks available.");
         return;
     }
-    for task in tasks {
-        println!("{:?}", task);
-    }
-}
 
-fn cmd_summary() {
-    let tasks = db::get_tasks();
-    tasks.iter().for_each(|t| {
-        let title = &t.title;
-        let duration = t.finished_at.unwrap_or(chrono::Utc::now().naive_utc()) - t.started_at;
-        println!(
-            "{:02}:{:02}:{:02} - {}",
-            duration.num_hours(),
-            duration.num_minutes(),
-            duration.num_seconds(),
-            title
-        )
-    });
+    let mut prev_date: Option<chrono::NaiveDate> = None;
+    let mut print_date_maybe = |task: &Task| {
+        let date = chrono::DateTime::<chrono::Utc>::from_utc(task.started_at, chrono::Utc)
+            .naive_local()
+            .date();
+
+        match prev_date {
+            None => println!("{}:", date),
+            Some(d) => {
+                if d != date {
+                    println!();
+                    println!("{}:", date);
+                }
+            }
+        }
+        prev_date = Some(date);
+    };
+
+    for task in tasks {
+        print_date_maybe(&task);
+
+        let num_seconds = task.duration().num_seconds();
+        let seconds = num_seconds % 60;
+        let minutes = (num_seconds / 60) % 60;
+        let hours = (num_seconds / (60 * 60)) % 60;
+
+        let duration = format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
+        println!("{} - {}", duration, task.title)
+    }
 }
