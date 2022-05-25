@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="120"
+   height="120"
+   viewBox="0 0 120 120"
+   version="1.1"
+   fill="#ffffff"
+   stroke="#ffffff"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <g id="layer1">
+    <g id="g15942" transform="matrix(1.1756994,0,0,1.1756994,-12.356652,-23.58393)">
+      <path style="fill:none;stroke-width:5" d="M 26.787527,103.50508 C 35.520813,112.45401 47.495854,117.5 60,117.5 c 25.629908,0 46.40705,-20.777151 46.40705,-46.407059 v 0 C 106.40705,45.463034 85.629907,24.685889 60,24.685886 c -12.246065,0 -23.995742,4.840419 -32.688265,13.466319 l 32.509922,32.509922 z" />
+      <path style="fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4" d="M 60,24.752467 V 38.471861" />
+      <path style="fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4" d="m 60,103.71402 v 12.87372" />
+      <path style="fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4" d="M 106.72814,71.092941 H 92.62108" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="m 84.453528,28.73819 c -2.714329,4.701357 -5.428658,9.402713 -8.142987,14.104069" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="m 43.689461,99.343626 c -2.71433,4.701354 -5.42866,9.402714 -8.14299,14.104074" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="M 102.35475,95.546468 C 97.6534,92.832143 92.95204,90.117812 88.250685,87.403483" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="m 102.35475,46.639415 c -4.701353,2.71433 -9.40271,5.428659 -14.104067,8.142987" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="M 84.453528,113.44769 C 81.7392,108.74634 79.024868,104.04498 76.310544,99.343629" />
+      <path style="fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4" d="M 43.689465,42.842264 35.546475,28.738192" />
+    </g>
+    <circle
+       style="stroke:none"
+       cx="25.857498"
+       cy="60"
+       r="5.653995" />
+    <circle
+       style="stroke:none"
+       cx="5.653995"
+       cy="60"
+       r="5.653995" />
+  </g>
+</svg>
