@@ -4,6 +4,7 @@ extern crate diesel;
 extern crate diesel_migrations;
 
 mod db;
+
 use clap::{arg, Command};
 use db::models::Filter;
 use db::models::Task;
@@ -31,28 +32,38 @@ fn main() {
         Some(("start", sub_matches)) => cmd_start(sub_matches.value_of("NAME").expect("")),
         Some(("stop", _)) => cmd_stop(),
         Some(("list", _)) => cmd_list(),
-        Some(("clear", _)) => db::remove(),
+        Some(("clear", _)) => cmd_clear(),
         Some(("summary", _)) => cmd_summary(),
-        _ => unreachable!(),
+        Some(r) => println!("Unknown command {}!", r.0),
+        None => unreachable!(),
     }
 }
 
+fn db() -> db::DB {
+    db::DB::new_xdg()
+}
+
 fn cmd_start(name: &str) {
-    db::finish_all();
-    db::add_task(name);
+    let db = db();
+    db.finish_all();
+    db.add_task(name);
 }
 
 fn cmd_stop() {
-    db::finish_all();
+    db().finish_all();
 }
 
 fn cmd_list() {
-    let tasks = db::get_tasks(Filter::Day(chrono::Local::now().date()));
+    let tasks = db().get_tasks(Filter::Day(chrono::Local::now().date()));
     print_tasks(tasks);
 }
 
+fn cmd_clear() {
+    db().clear_tasks()
+}
+
 fn cmd_summary() {
-    let tasks = db::get_tasks(Filter::Week);
+    let tasks = db().get_tasks(Filter::Week);
     print_tasks(tasks);
 }
 
