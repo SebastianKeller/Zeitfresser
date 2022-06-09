@@ -6,8 +6,7 @@ extern crate diesel_migrations;
 mod db;
 
 use clap::{arg, Command};
-use db::models::Filter;
-use db::models::Task;
+use db::models::{Filter, Task};
 
 fn cli() -> Command<'static> {
     Command::new("zeitfresser")
@@ -79,20 +78,33 @@ fn print_tasks(tasks: Vec<Task>) {
             .naive_local()
             .date();
 
-        match prev_date {
-            None => println!("{}:", date),
-            Some(d) => {
-                if d != date {
-                    println!();
-                    println!("{}:", date);
-                }
+        // Early return if we are about to print the same date
+        if let Some(prev) = prev_date {
+            if prev == date {
+                return;
             }
         }
+
+        let date_str = format!("{}:", date);
+        let underscore: String = date_str.chars().map(|_| '-').collect();
+        let new_line = match prev_date {
+            Some(d) if d != date => "\n",
+            Some(_) => "",
+            None => "",
+        };
+
+        println!("{}{}\n{}", new_line, date_str, underscore);
         prev_date = Some(date);
     };
 
     for task in tasks {
         print_date_maybe(&task);
+
+        let start = task.started_at.format("%H:%M:%S");
+        let end = match task.finished_at {
+            Some(value) => format!("{}", value.format("%H:%M:%S")).to_string(),
+            None => "--:--:--".to_string(),
+        };
 
         let num_seconds = task.duration().num_seconds();
         let seconds = num_seconds % 60;
@@ -100,6 +112,6 @@ fn print_tasks(tasks: Vec<Task>) {
         let hours = (num_seconds / (60 * 60)) % 60;
 
         let duration = format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
-        println!("{} - {}", duration, task.title)
+        println!("{} - {} ({}) | {}", start, end, duration, task.title)
     }
 }
