@@ -20,7 +20,7 @@ fn cli() -> Command<'static> {
                 .arg(arg!(<NAME> "The name of the task"))
                 .arg_required_else_help(true),
         )
-        .subcommand(Command::new("end").about("Ends the current task"))
+        .subcommand(Command::new("stop").about("Ends the current task"))
         .subcommand(Command::new("list").about("Lists the previous taks"))
         .subcommand(Command::new("summary"))
         .subcommand(Command::new("clear").about("Removes all taks"))
