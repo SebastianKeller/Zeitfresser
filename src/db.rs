@@ -36,7 +36,13 @@ impl DB {
         let mut query = tasks.into_boxed();
 
         match filter {
+            models::Filter::Last => query = query.order_by(started_at.desc()).limit(1),
+            _ => query = query.order_by(started_at.asc()),
+        }
+
+        match filter {
             models::Filter::All => {}
+            models::Filter::Last => {}
             models::Filter::Day(date) => {
                 let start = date.and_hms(0, 0, 0).naive_utc();
                 let end = date.and_hms(23, 59, 59).naive_utc();
@@ -56,7 +62,6 @@ impl DB {
         }
 
         query
-            .order_by(started_at)
             .load::<Task>(&self.connection)
             .expect("Error loading tasks")
     }
@@ -79,6 +84,17 @@ impl DB {
             .set(finished_at.eq(diesel::dsl::now))
             .execute(&self.connection)
             .expect("Failed to update all");
+    }
+
+    pub fn update_task(&self, task: Task) {
+        use schema::tasks::dsl::*;
+        diesel::update(tasks.filter(id.eq(task.id)))
+            .set((
+                finished_at.eq(task.finished_at),
+                title.eq(task.title)
+            ))
+            .execute(&self.connection)
+            .expect("Failed to update task");
     }
 
     pub fn clear_tasks(&self) {

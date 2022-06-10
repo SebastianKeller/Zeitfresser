@@ -5,6 +5,7 @@ extern crate diesel_migrations;
 
 mod db;
 
+use chrono::Timelike;
 use clap::{arg, Command};
 use db::models::{Filter, Task};
 
@@ -19,9 +20,12 @@ fn cli() -> Command<'static> {
                 .arg(arg!(<NAME> "The name of the task"))
                 .arg_required_else_help(true),
         )
-        .subcommand(Command::new("stop").about("Ends the current task"))
-        .subcommand(Command::new("list").about("Lists the previous taks"))
-        .subcommand(Command::new("summary"))
+        .subcommand(
+            Command::new("stop")
+                .about("Ends the current task")
+                .arg(arg!([TIME] "When the task has been finished.")),
+        )
+        .subcommand(Command::new("show").about("Presents an overview of previous tasks"))
         .subcommand(Command::new("clear").about("Removes all taks"))
 }
 
@@ -29,10 +33,10 @@ fn main() {
     let matches = cli().get_matches();
     match matches.subcommand() {
         Some(("start", sub_matches)) => cmd_start(sub_matches.value_of("NAME").expect("")),
-        Some(("stop", _)) => cmd_stop(),
+        Some(("stop", sub_matches)) => cmd_stop(sub_matches.value_of("TIME")),
         Some(("list", _)) => cmd_list(),
         Some(("clear", _)) => cmd_clear(),
-        Some(("summary", _)) => cmd_summary(),
+        Some(("show", _)) => cmd_summary(),
         Some(r) => println!("Unknown command {}!", r.0),
         None => unreachable!(),
     }
@@ -48,8 +52,35 @@ fn cmd_start(name: &str) {
     db.add_task(name);
 }
 
-fn cmd_stop() {
-    db().finish_all();
+fn cmd_stop(time: Option<&str>) {
+    let db = db();
+    let tasks = db.get_tasks(Filter::Last);
+    let last_task = tasks.first();
+    if last_task.is_none() {
+        return;
+    }
+    let mut last_task = last_task.unwrap().clone();
+
+    let date_time = match time {
+        Some(s) => {
+            let result = chrono::NaiveTime::parse_from_str(s, "%H:%M");
+            if result.is_err() {
+                println!("Could not parse {} to local time", s);
+                return;
+            }
+            let result = result.unwrap();
+            let mut date = chrono::Utc::now().naive_local();
+            date = date.with_hour(result.hour()).unwrap();
+            date = date.with_minute(result.minute()).unwrap();
+            date = date.with_second(0).unwrap();
+            date = date.with_nanosecond(0).unwrap();
+            date
+        }
+        None => chrono::Utc::now().naive_local(),
+    };
+
+    last_task.finished_at = Some(date_time);
+    db.update_task(last_task)
 }
 
 fn cmd_list() {

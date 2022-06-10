@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize, Queryable)]
+#[derive(Debug, Serialize, Queryable, Clone)]
 pub struct Task {
     pub id: i32,
     pub title: String,
@@ -20,4 +20,5 @@ pub enum Filter {
     All,
     Day(chrono::Date<chrono::Local>),
     Week,
+    Last,
 }
